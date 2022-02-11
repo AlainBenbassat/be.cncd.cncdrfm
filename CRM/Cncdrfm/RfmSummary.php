@@ -3,6 +3,8 @@
 class CRM_Cncdrfm_RfmSummary {
 
   public function getNumberOfContactsWithCode($referenceYear, $code) {
+    $whereCode = $this->codeToWhere($code);
+
     $sql = "
       select
         count(c.id)
@@ -14,8 +16,7 @@ class CRM_Cncdrfm_RfmSummary {
         c.is_deleted = 0
       and
         rfm.reference_year = $referenceYear
-      and
-        rfm.recency = '$code'
+      $whereCode
     ";
 
     return CRM_Core_DAO::singleValueQuery($sql);
@@ -41,6 +42,8 @@ class CRM_Cncdrfm_RfmSummary {
   }
 
   public function getNumberOfActiveContactsWithCode($referenceYear, $code) {
+    $whereCode = $this->codeToWhere($code);
+
     $sql = "
       select
         count(c.id)
@@ -52,8 +55,7 @@ class CRM_Cncdrfm_RfmSummary {
         c.is_deleted = 0
       and
         rfm.reference_year = $referenceYear
-      and
-        rfm.recency = '$code'
+      $whereCode
       and
         rfm.frequency > 0
     ";
@@ -62,6 +64,8 @@ class CRM_Cncdrfm_RfmSummary {
   }
 
   public function getSumOfFrequencyWithCode($referenceYear, $code) {
+    $whereCode = $this->codeToWhere($code);
+
     $sql = "
       select
         ifnull(sum(rfm.frequency), 0)
@@ -73,14 +77,15 @@ class CRM_Cncdrfm_RfmSummary {
         c.is_deleted = 0
       and
         rfm.reference_year = $referenceYear
-      and
-        rfm.recency = '$code'
+      $whereCode
     ";
 
     return CRM_Core_DAO::singleValueQuery($sql);
   }
 
   public function getAverageOfMonetaryValueWithCode($referenceYear, $code) {
+    $whereCode = $this->codeToWhere($code);
+
     $sql = "
       select
         ifnull(avg(rfm.monetary_value), 0)
@@ -94,14 +99,15 @@ class CRM_Cncdrfm_RfmSummary {
         rfm.reference_year = $referenceYear
       and
         rfm.recency = '$code'
-      and
-        rfm.frequency > 0
+      $whereCode
     ";
 
     return CRM_Core_DAO::singleValueQuery($sql);
   }
 
   public function getSumOfMonetaryValueWithCode($referenceYear, $code) {
+    $whereCode = $this->codeToWhere($code);
+
     $sql = "
       select
         ifnull(sum(rfm.monetary_value), 0)
@@ -113,13 +119,21 @@ class CRM_Cncdrfm_RfmSummary {
         c.is_deleted = 0
       and
         rfm.reference_year = $referenceYear
-      and
-        rfm.recency = '$code'
+      $whereCode
       and
         rfm.frequency > 0
     ";
 
     return CRM_Core_DAO::singleValueQuery($sql);
+  }
+
+  private function codeToWhere($code) {
+    if ($code == 'total') {
+      return " and ifnull(rfm.recency, '') <> ''";
+    }
+    else {
+      return  " and rfm.recency = '$code'";
+    }
   }
 
 }

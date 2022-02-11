@@ -17,7 +17,7 @@ class CRM_Cncdrfm_RfmContact {
         exists (
           select * from civicrm_contribution contrib where contrib.contact_id = c.id and year(contrib.receive_date) >= $minYear
             and " . self::getContribWhere() .
-    ') limit 0,150';
+    ')';
 
     return CRM_Core_DAO::executeQuery($sql);
   }

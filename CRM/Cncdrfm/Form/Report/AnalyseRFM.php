@@ -102,7 +102,7 @@ class CRM_Cncdrfm_Form_Report_AnalyseRFM extends CRM_Report_Form {
   private function getRowActiveContributers($rfmSummary, $referenceYear) {
     $row = [];
     $row['civicrm_dummy_entity_code'] = 'NRG New';
-    $row['civicrm_dummy_entity_combien'] = $rfmSummary->getNumberOfActiveContacts($referenceYear, 'new');
+    $row['civicrm_dummy_entity_combien'] = $rfmSummary->getNumberOfActiveContacts($referenceYear);
     $row['civicrm_dummy_entity_actifs'] = '';
     $row['civicrm_dummy_entity_pct_activite'] = '';
     $row['civicrm_dummy_entity_frequence'] = '';
@@ -125,7 +125,7 @@ class CRM_Cncdrfm_Form_Report_AnalyseRFM extends CRM_Report_Form {
     $row['civicrm_dummy_entity_pct_activite'] = round($numActive / $numTotal * 100, 0) . ' %';
 
     $numContributions = $rfmSummary->getSumOfFrequencyWithCode($referenceYear, $rfmCode);
-    $row['civicrm_dummy_entity_frequence'] = round($numContributions / $numTotal, 1);
+    $row['civicrm_dummy_entity_frequence'] = round($numContributions / $numTotal, 1) . '';
 
     $avgContribtions = $rfmSummary->getAverageOfMonetaryValueWithCode($referenceYear, $rfmCode);
     $row['civicrm_dummy_entity_valeur_moyenne'] = round($avgContribtions, 2) . ' EUR';
