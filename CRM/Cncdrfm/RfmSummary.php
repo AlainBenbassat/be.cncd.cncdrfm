@@ -3,13 +3,6 @@
 class CRM_Cncdrfm_RfmSummary {
 
   public function getNumberOfContactsWithCode($referenceYear, $code) {
-    if ($code == 'new') {
-      $whereCode = 'rfm.frequency > 0';
-    }
-    else {
-      $whereCode = "rfm.recency = '$code'";
-    }
-
     $sql = "
       select
         count(c.id)
@@ -22,7 +15,26 @@ class CRM_Cncdrfm_RfmSummary {
       and
         rfm.reference_year = $referenceYear
       and
-        $whereCode
+        rfm.recency = '$code'
+    ";
+
+    return CRM_Core_DAO::singleValueQuery($sql);
+  }
+
+  public function getNumberOfActiveContacts($referenceYear) {
+    $sql = "
+      select
+        count(c.id)
+      from
+        civicrm_contact c
+      inner join
+        civicrm_value_cncd_rfm rfm on rfm.entity_id = c.id
+      where
+        c.is_deleted = 0
+      and
+        rfm.reference_year = $referenceYear
+      and
+        rfm.frequency > 0
     ";
 
     return CRM_Core_DAO::singleValueQuery($sql);

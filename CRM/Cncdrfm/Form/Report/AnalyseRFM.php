@@ -85,42 +85,58 @@ class CRM_Cncdrfm_Form_Report_AnalyseRFM extends CRM_Report_Form {
   }
 
   public function alterDisplay(&$rows) {
-    $rfmCategories = CRM_Cncdrfm_Config::rfmCategories;
     $rfmSummary = new CRM_Cncdrfm_RfmSummary();
-
     $referenceYear = $this->getSubmittedFilterReferenceYear();
-
     $rows = [];
 
+    $rows[] = $this->getRowActiveContributers($rfmSummary, $referenceYear);
+
+    $rfmCategories = $this->getRfmCategories();
     foreach ($rfmCategories as $rfmCode => $rfmLabel) {
-      $row['civicrm_dummy_entity_code'] = $rfmLabel;
-
-      $numTotal = $rfmSummary->getNumberOfContactsWithCode($referenceYear, $rfmCode);
-      $row['civicrm_dummy_entity_combien'] = $numTotal;
-      if ($rfmCode == 'new') {
-        $row['civicrm_dummy_entity_actifs'] = '';
-        $row['civicrm_dummy_entity_pct_activite'] = '';
-        $row['civicrm_dummy_entity_frequence'] = '';
-        $row['civicrm_dummy_entity_valeur_moyenne'] = '';
-        $row['civicrm_dummy_entity_total'] = '';
-      }
-      else {
-        $numActive = $rfmSummary->getNumberOfActiveContactsWithCode($referenceYear, $rfmCode);
-        $row['civicrm_dummy_entity_actifs'] = $numActive;
-        $row['civicrm_dummy_entity_pct_activite'] = round($numActive / $numTotal * 100, 0) . ' %';
-
-        $numContributions = $rfmSummary->getSumOfFrequencyWithCode($referenceYear, $rfmCode);
-        $row['civicrm_dummy_entity_frequence'] = round($numContributions / $numTotal, 1);
-
-        $avgContribtions = $rfmSummary->getAverageOfMonetaryValueWithCode($referenceYear, $rfmCode);
-        $row['civicrm_dummy_entity_valeur_moyenne'] = round($avgContribtions, 2) . ' EUR';
-
-        $row['civicrm_dummy_entity_total'] = $rfmSummary->getSumOfMonetaryValueWithCode($referenceYear, $rfmCode) . ' EUR';
-      }
-
-      $rows[] = $row;
+      $rows[] = $this->getRowContributersWithCode($rfmSummary, $referenceYear, $rfmLabel, $rfmCode);
     }
 
+    $rows[] = $this->getRowContributersWithCode($rfmSummary, $referenceYear, 'Total', 'total');
+  }
+
+  private function getRowActiveContributers($rfmSummary, $referenceYear) {
+    $row = [];
+    $row['civicrm_dummy_entity_code'] = 'NRG New';
+    $row['civicrm_dummy_entity_combien'] = $rfmSummary->getNumberOfActiveContacts($referenceYear, 'new');
+    $row['civicrm_dummy_entity_actifs'] = '';
+    $row['civicrm_dummy_entity_pct_activite'] = '';
+    $row['civicrm_dummy_entity_frequence'] = '';
+    $row['civicrm_dummy_entity_valeur_moyenne'] = '';
+    $row['civicrm_dummy_entity_total'] = '';
+    return $row;
+  }
+
+  private function getRowContributersWithCode($rfmSummary, $referenceYear, $rfmLabel, $rfmCode) {
+    $row = [];
+
+    $row['civicrm_dummy_entity_code'] = $rfmLabel;
+
+    $numTotal = $rfmSummary->getNumberOfContactsWithCode($referenceYear, $rfmCode);
+    $row['civicrm_dummy_entity_combien'] = $numTotal;
+
+    $numActive = $rfmSummary->getNumberOfActiveContactsWithCode($referenceYear, $rfmCode);
+    $row['civicrm_dummy_entity_actifs'] = $numActive;
+
+    $row['civicrm_dummy_entity_pct_activite'] = round($numActive / $numTotal * 100, 0) . ' %';
+
+    $numContributions = $rfmSummary->getSumOfFrequencyWithCode($referenceYear, $rfmCode);
+    $row['civicrm_dummy_entity_frequence'] = round($numContributions / $numTotal, 1);
+
+    $avgContribtions = $rfmSummary->getAverageOfMonetaryValueWithCode($referenceYear, $rfmCode);
+    $row['civicrm_dummy_entity_valeur_moyenne'] = round($avgContribtions, 2) . ' EUR';
+
+    $row['civicrm_dummy_entity_total'] = $rfmSummary->getSumOfMonetaryValueWithCode($referenceYear, $rfmCode) . ' EUR';
+
+    return $row;
+  }
+
+  private function getRowTotalContributers($rfmSummary, $referenceYear) {
+    $row = [];
     $row['civicrm_dummy_entity_code'] = '<strong>Total</strong>';
     $row['civicrm_dummy_entity_combien'] = '';
     $row['civicrm_dummy_entity_actifs'] = '';
@@ -128,11 +144,23 @@ class CRM_Cncdrfm_Form_Report_AnalyseRFM extends CRM_Report_Form {
     $row['civicrm_dummy_entity_frequence'] = '';
     $row['civicrm_dummy_entity_valeur_moyenne'] = '';
     $row['civicrm_dummy_entity_total'] = '';
-    $rows[] = $row;
+    return $row;
   }
 
   private function getSubmittedFilterReferenceYear() {
     return $this->getSubmitValues()['annee_reference_value'];
+  }
+
+  private function getRfmCategories() {
+    return [
+      '001' => 'NRG 001',
+      '010' => 'NRG 010',
+      '011' => 'NRG 011',
+      '100' => 'NRG 100',
+      '101' => 'NRG 101',
+      '110' => 'NRG 110',
+      '111' => 'NRG 111',
+    ];
   }
 
   private function getYears() {
