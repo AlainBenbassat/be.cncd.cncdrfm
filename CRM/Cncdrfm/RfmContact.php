@@ -1,6 +1,6 @@
 <?php
 
-class CRM_Cncdrfm_Helper {
+class CRM_Cncdrfm_RfmContact {
   public static function getContribWhere() {
     return 'contrib.financial_type_id in (1, 19, 15, 3, 17) and contrib.contribution_status_id = 1';
   }
@@ -17,12 +17,34 @@ class CRM_Cncdrfm_Helper {
         exists (
           select * from civicrm_contribution contrib where contrib.contact_id = c.id and year(contrib.receive_date) >= $minYear
             and " . self::getContribWhere() .
-    ') limit 0,10';
+    ') limit 0,150';
 
     return CRM_Core_DAO::executeQuery($sql);
   }
 
   public static function calculateRFM(CRM_Queue_TaskContext $ctx, $id, $year) {
+    if (self::hasRfmForYear($id, $year)) {
+      self::updateRFM($id, $year);
+    }
+    else {
+      self::insertRFM($id, $year);
+    }
+
+    return TRUE;
+  }
+
+  public static function hasRfmForYear($id, $year) {
+    $sql = "select id from civicrm_value_cncd_rfm where entity_id = $id and reference_year = $year";
+    $dao = CRM_Core_DAO::executeQuery($sql);
+    if ($dao->fetch()) {
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    }
+  }
+
+  public static function insertRFM($id, $year) {
     $config = new CRM_Cncdrfm_Config();
 
     $customField_year = 'custom_' . $config->getCustomFieldYear()['id'];
@@ -42,6 +64,32 @@ class CRM_Cncdrfm_Helper {
     civicrm_api3('contact', 'create', $params);
   }
 
+  public static function updateRFM($id, $year) {
+    $sql = "
+      update
+        civicrm_value_cncd_rfm
+      set
+        recency = %1,
+        frequency = %2,
+        monetary_value = %3,
+        average_monetary_value = %4
+      where
+        entity_id = $id
+      and
+        reference_year = $year
+    ";
+
+    $sqlParams = [
+      1 => [self::calcRecency($id, $year), 'String'],
+      2 => [self::calcFrequency($id, $year), 'Integer'],
+      3 => [self::calcMonetaryValue($id, $year), 'Money'],
+      4 => [self::calcAverageMonetaryValue($id, $year), 'Money'],
+    ];
+
+    CRM_Core_DAO::executeQuery($sql, $sqlParams);
+  }
+
+
   public static function calcRecency($id, $year) {
     $rfmYearMinus1 = self::getRfmForContactAndYear($id, $year - 1);
     if (!$rfmYearMinus1) {
@@ -58,9 +106,9 @@ class CRM_Cncdrfm_Helper {
       return '';
     }
 
-    $rfm = $rfmYearMinus3->recency >= 1 ? '1' : '0';
-    $rfm .= $rfmYearMinus2->recency >= 1 ? '1' : '0';
-    $rfm .= $rfmYearMinus1->recency >= 1 ? '1' : '0';
+    $rfm = $rfmYearMinus3->frequency >= 1 ? '1' : '0';
+    $rfm .= $rfmYearMinus2->frequency >= 1 ? '1' : '0';
+    $rfm .= $rfmYearMinus1->frequency >= 1 ? '1' : '0';
 
     if ($rfm != '000') {
       return $rfm;
@@ -101,7 +149,7 @@ class CRM_Cncdrfm_Helper {
   public static function calcAverageMonetaryValue($id, $year) {
     $sql = "
       select
-        ifnull(avg(contrib.total_amount), 0)
+        round(ifnull(avg(contrib.total_amount), 0), 2)
       from
         civicrm_contribution contrib
       where
@@ -115,7 +163,7 @@ class CRM_Cncdrfm_Helper {
   public static function getRfmForContactAndYear($id, $year) {
     $sql = "select * from civicrm_value_cncd_rfm where entity_id = $id and reference_year = $year";
     $dao = CRM_Core_DAO::executeQuery($sql);
-    return $dao->fetch();
+    $dao->fetch();
+    return $dao;
   }
-
 }

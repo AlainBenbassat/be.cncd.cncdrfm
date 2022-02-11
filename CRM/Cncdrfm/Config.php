@@ -1,6 +1,17 @@
 <?php
 
 class CRM_Cncdrfm_Config {
+  public const rfmCategories = [
+    'new' => 'NRG New',
+    '001' => 'NRG 001',
+    '010' => 'NRG 010',
+    '011' => 'NRG 011',
+    '100' => 'NRG 100',
+    '101' => 'NRG 101',
+    '110' => 'NRG 110',
+    '111' => 'NRG 111',
+  ];
+
   public function checkConfig() {
     $this->getCustomFieldYear();
     $this->getCustomFieldRecency();

@@ -41,9 +41,9 @@ class CRM_Cncdrfm_Form_GenerateRfmData extends CRM_Core_Form {
 
     // store all the selected participant id's in the queue
     $minYear = date('Y') - self::NUM_YEARS;
-    $dao = CRM_Cncdrfm_Helper::getContactsWithDonations($minYear);
+    $dao = CRM_Cncdrfm_RfmContact::getContactsWithDonations($minYear);
     while($dao->fetch()) {
-      $task = new CRM_Queue_Task(['CRM_Cncdrfm_Helper', 'calculateRFM'], [$dao->id, $year]);
+      $task = new CRM_Queue_Task(['CRM_Cncdrfm_RfmContact', 'calculateRFM'], [$dao->id, $year]);
       $this->queue->createItem($task);
     }
 
@@ -74,7 +74,7 @@ class CRM_Cncdrfm_Form_GenerateRfmData extends CRM_Core_Form {
   private function getYears() {
     $years = [];
 
-    $y = date('Y') - 1;
+    $y = date('Y');
     for ($i = 0; $i < self::NUM_YEARS; $i++) {
       $years[$y - $i] = $y - $i;
     }
