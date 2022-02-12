@@ -97,8 +97,6 @@ class CRM_Cncdrfm_RfmSummary {
         c.is_deleted = 0
       and
         rfm.reference_year = $referenceYear
-      and
-        rfm.recency = '$code'
       $whereCode
     ";
 
