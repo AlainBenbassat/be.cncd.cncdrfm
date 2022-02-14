@@ -3,25 +3,10 @@
 use CRM_Cncdrfm_ExtensionUtil as E;
 
 class CRM_Cncdrfm_Form_GenerateRfmData extends CRM_Core_Form {
-  private $queue;
-  private $queueName = 'rfmcncd';
-  private const NUM_YEARS = 6;
-
-  public function __construct($state = NULL, $action = CRM_Core_Action::NONE, $method = 'post', $name = NULL) {
-    // create the queue
-    $this->queue = CRM_Queue_Service::singleton()->create([
-      'type' => 'Sql',
-      'name' => $this->queueName,
-      'reset' => TRUE,
-    ]);
-
-    parent::__construct($state, $action, $method, $name);
-  }
-
   public function buildQuickForm() {
     $this->setTitle('Mise à jour RFM');
 
-    $this->add('select','year','Année', $this->getYears(),TRUE);
+    $this->add('select','year','Année', CRM_Cncdrfm_RfmContact::getYears(),TRUE);
 
     $this->addButtons(array(
       array(
@@ -39,23 +24,9 @@ class CRM_Cncdrfm_Form_GenerateRfmData extends CRM_Core_Form {
     $values = $this->exportValues();
     $year = $values['year'];
 
-    // store all the selected participant id's in the queue
-    $minYear = date('Y') - self::NUM_YEARS;
-    $dao = CRM_Cncdrfm_RfmContact::getContactsWithDonations($minYear);
-    while($dao->fetch()) {
-      $task = new CRM_Queue_Task(['CRM_Cncdrfm_RfmContact', 'calculateRFM'], [$dao->id, $year]);
-      $this->queue->createItem($task);
-    }
-
-    // run the queue
-    $runner = new CRM_Queue_Runner([
-      'title' => E::ts('Calculate RFM'),
-      'queue' => $this->queue,
-      'onEndUrl'  => CRM_Utils_System::url('civicrm/cncdrfm-generate', 'reset=1'),
-      'onEnd' => ['CRM_Cncdrfm_Form_GenerateRfmData', 'onEnd'],
-      'errorMode'=> CRM_Queue_Runner::ERROR_CONTINUE,
-    ]);
-    $runner->runAllViaWeb();
+    $queue = new CRM_Cncdrfm_RfmQueue();
+    $queue->storeContacts($year);
+    $queue->runViaWeb();
   }
 
   public function getRenderableElementNames() {
@@ -69,17 +40,6 @@ class CRM_Cncdrfm_Form_GenerateRfmData extends CRM_Core_Form {
     }
 
     return $elementNames;
-  }
-
-  private function getYears() {
-    $years = [];
-
-    $y = date('Y');
-    for ($i = 0; $i < self::NUM_YEARS; $i++) {
-      $years[$y - $i] = $y - $i;
-    }
-
-    return $years;
   }
 
 }

@@ -1,8 +1,21 @@
 <?php
 
 class CRM_Cncdrfm_RfmContact {
+  public const NUM_YEARS = 6;
+
   public static function getContribWhere() {
     return 'contrib.financial_type_id in (1, 19, 15, 3, 17) and contrib.contribution_status_id = 1';
+  }
+
+  public static function getYears() {
+    $years = [];
+
+    $y = date('Y');
+    for ($i = 0; $i < self::NUM_YEARS; $i++) {
+      $years[$y - $i] = $y - $i;
+    }
+
+    return $years;
   }
 
   public static function getContactsWithDonations($minYear) {
@@ -24,10 +37,14 @@ class CRM_Cncdrfm_RfmContact {
 
   public static function calculateRFM(CRM_Queue_TaskContext $ctx, $id, $year) {
     if (self::hasRfmForYear($id, $year)) {
-      self::updateRFM($id, $year);
+      [$r, $f, $m] = self::updateRFM($id, $year);
     }
     else {
-      self::insertRFM($id, $year);
+      [$r, $f, $m] = self::insertRFM($id, $year);
+    }
+
+    if ($f == 12 && self::convertPseudoRecurringDonations($id, $year)) {
+      self::updateRFM($id, $year);
     }
 
     return TRUE;
@@ -53,18 +70,30 @@ class CRM_Cncdrfm_RfmContact {
     $customField_monetaryValue = 'custom_' . $config->getCustomFieldMonetaryValue()['id'];
     $customField_average = 'custom_' . $config->getCustomFieldAverageMonetaryValue()['id'];
 
+    $r = self::calcRecency($id, $year);
+    $f = self::calcFrequency($id, $year);
+    $m = self::calcMonetaryValue($id, $year);
+    $avgM = self::calcAverageMonetaryValue($id, $year);
+
     $params = [
       'id' => $id,
       $customField_year => $year,
-      $customField_recency => self::calcRecency($id, $year),
-      $customField_frequency => self::calcFrequency($id, $year),
-      $customField_monetaryValue => self::calcMonetaryValue($id, $year),
-      $customField_average => self::calcAverageMonetaryValue($id, $year),
+      $customField_recency => $r,
+      $customField_frequency => $f,
+      $customField_monetaryValue => $m,
+      $customField_average => $avgM,
     ];
     civicrm_api3('contact', 'create', $params);
+
+    return [$r, $f, $m];
   }
 
   public static function updateRFM($id, $year) {
+    $r = self::calcRecency($id, $year);
+    $f = self::calcFrequency($id, $year);
+    $m = self::calcMonetaryValue($id, $year);
+    $avgM = self::calcAverageMonetaryValue($id, $year);
+
     $sql = "
       update
         civicrm_value_cncd_rfm
@@ -80,13 +109,15 @@ class CRM_Cncdrfm_RfmContact {
     ";
 
     $sqlParams = [
-      1 => [self::calcRecency($id, $year), 'String'],
-      2 => [self::calcFrequency($id, $year), 'Integer'],
-      3 => [self::calcMonetaryValue($id, $year), 'Money'],
-      4 => [self::calcAverageMonetaryValue($id, $year), 'Money'],
+      1 => [$r, 'String'],
+      2 => [$f, 'Integer'],
+      3 => [$m, 'Money'],
+      4 => [$avgM, 'Money'],
     ];
 
     CRM_Core_DAO::executeQuery($sql, $sqlParams);
+
+    return [$r, $f, $m];
   }
 
 
@@ -165,5 +196,85 @@ class CRM_Cncdrfm_RfmContact {
     $dao = CRM_Core_DAO::executeQuery($sql);
     $dao->fetch();
     return $dao;
+  }
+
+  public static function getTwelveDonationsWithSameAmount($id, $year) {
+    $sql = "
+      SELECT
+        contrib.total_amount,
+        group_concat(month(contrib.receive_date)) receive_month,
+        group_concat(day(contrib.receive_date)) receive_day,
+        group_concat(contrib.id) contrib_ids,
+        count(contrib.id) num_contribs
+      from
+          civicrm_contribution contrib
+      where
+        " . self::getContribWhere() . "
+      and
+        contrib.contact_id = $id
+      and
+        year(contrib.receive_date) = $year
+      group BY
+        contrib.total_amount
+      having
+        count(contrib.id) = 12
+    ";
+
+    return CRM_Core_DAO::executeQuery($sql);
+  }
+
+  public static function convertPseudoRecurringDonations($id, $year) {
+    $hasConvertedDonations = FALSE;
+
+    $dao = self::getTwelveDonationsWithSameAmount($id, $year);
+    while ($dao->fetch()) {
+      if (self::hasDonationsEveryMonth($dao->receive_month) && self::hasDonationsOnSameDay($dao->receive_day)) {
+        self::convertContributionsToRecurring($dao->contrib_ids);
+        $hasConvertedDonations = TRUE;
+      }
+    }
+
+    return $hasConvertedDonations;
+  }
+
+  public static function hasDonationsEveryMonth($months) {
+    $monthArray = explode(',', $months);
+    if (count($monthArray) != 12) {
+      return FALSE;
+    }
+
+    sort($monthArray);
+    for ($i = 0; $i < 12; $i++) {
+      if ($monthArray[$i] != $i + 1) {
+        return FALSE;
+      }
+    }
+
+    return TRUE;
+  }
+
+  public static function hasDonationsOnSameDay($days) {
+    $dayArray = explode(',', $days);
+    $tolerance = 5;
+
+    if (max($dayArray) - min($dayArray) > $tolerance) {
+      return FALSE;
+    }
+    else {
+      return TRUE;
+    }
+  }
+
+  public static function convertContributionsToRecurring($contribIds) {
+    $sql = "
+      update
+        civicrm_contribution
+      set
+        financial_type_id = 16,
+        source = 'Don NRG converti en don récurrent'
+      where
+        id in ($contribIds)
+    ";
+    CRM_Core_DAO::executeQuery($sql);
   }
 }
