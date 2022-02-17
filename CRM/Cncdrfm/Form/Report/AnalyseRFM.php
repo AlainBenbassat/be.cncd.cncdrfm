@@ -127,10 +127,11 @@ class CRM_Cncdrfm_Form_Report_AnalyseRFM extends CRM_Report_Form {
     $numContributions = $rfmSummary->getSumOfFrequencyWithCode($referenceYear, $rfmCode);
     $row['civicrm_dummy_entity_frequence'] = round($numContributions / $numActive, 1) . '';
 
-    $avgContribtions = $rfmSummary->getAverageOfMonetaryValueWithCode($referenceYear, $rfmCode);
-    $row['civicrm_dummy_entity_valeur_moyenne'] = round($avgContribtions, 2) . ' EUR';
+    $sumTotal = $rfmSummary->getSumOfMonetaryValueWithCode($referenceYear, $rfmCode);
+    $row['civicrm_dummy_entity_total'] =  $sumTotal . ' EUR';
 
-    $row['civicrm_dummy_entity_total'] = $rfmSummary->getSumOfMonetaryValueWithCode($referenceYear, $rfmCode) . ' EUR';
+    //$avgContribtions = $rfmSummary->getAverageOfMonetaryValueWithCode($referenceYear, $rfmCode);
+    $row['civicrm_dummy_entity_valeur_moyenne'] = round($sumTotal / $numActive, 2) . ' EUR';
 
     return $row;
   }
