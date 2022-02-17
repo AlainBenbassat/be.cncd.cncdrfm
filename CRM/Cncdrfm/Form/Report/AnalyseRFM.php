@@ -130,7 +130,6 @@ class CRM_Cncdrfm_Form_Report_AnalyseRFM extends CRM_Report_Form {
     $sumTotal = $rfmSummary->getSumOfMonetaryValueWithCode($referenceYear, $rfmCode);
     $row['civicrm_dummy_entity_total'] =  $sumTotal . ' EUR';
 
-    //$avgContribtions = $rfmSummary->getAverageOfMonetaryValueWithCode($referenceYear, $rfmCode);
     $row['civicrm_dummy_entity_valeur_moyenne'] = round($sumTotal / $numActive, 2) . ' EUR';
 
     return $row;
