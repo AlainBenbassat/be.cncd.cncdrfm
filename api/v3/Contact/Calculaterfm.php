@@ -27,7 +27,7 @@ function civicrm_api3_contact_Calculaterfm_ValidateYear($y) {
   $currentYear = date('Y');
   $minYear = $currentYear - CRM_Cncdrfm_RfmContact::NUM_YEARS;
 
-  if ($y >= $currentYear || $y < $minYear) {
+  if ($y > $currentYear || $y < $minYear) {
     throw new Exception("Year: $y is not between $minYear and $currentYear");
   }
 }
