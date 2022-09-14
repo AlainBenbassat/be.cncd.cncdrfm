@@ -1,10 +1,13 @@
 <?php
 
 class CRM_Cncdrfm_RfmContact {
-  public const NUM_YEARS = 6;
+  public const NUM_YEARS = 7;
 
   public static function getContribWhere() {
-    return 'contrib.financial_type_id in (1, 19, 15, 3, 17) and contrib.contribution_status_id = 1';
+    $donPourUneCampagne = 3;
+    $donPonctuel = 15;
+
+    return "contrib.financial_type_id in ($donPourUneCampagne, $donPonctuel) and contrib.contribution_status_id = 1";
   }
 
   public static function getYears() {
@@ -35,7 +38,7 @@ class CRM_Cncdrfm_RfmContact {
     return CRM_Core_DAO::executeQuery($sql);
   }
 
-  public static function calculateRFM(CRM_Queue_TaskContext $ctx, $id, $year) {
+  public static function calculateRFM($ctx, $id, $year) {
     if (self::hasRfmForYear($id, $year)) {
       [$r, $f, $m] = self::updateRFM($id, $year);
     }
@@ -141,12 +144,7 @@ class CRM_Cncdrfm_RfmContact {
     $rfm .= $rfmYearMinus2->frequency >= 1 ? '1' : '0';
     $rfm .= $rfmYearMinus1->frequency >= 1 ? '1' : '0';
 
-    if ($rfm != '000') {
-      return $rfm;
-    }
-    else {
-      return '';
-    }
+    return $rfm;
   }
 
   public static function calcFrequency($id, $year) {

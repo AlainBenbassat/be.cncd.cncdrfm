@@ -5,7 +5,6 @@ function _civicrm_api3_contact_Calculaterfm_spec(&$spec) {
   $spec['reference_year']['api.required'] = 0;
 }
 
-
 function civicrm_api3_contact_Calculaterfm($params) {
   try {
     $referenceYear = civicrm_api3_contact_Calculaterfm_getYear($params);

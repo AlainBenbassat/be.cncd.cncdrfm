@@ -102,7 +102,7 @@ class CRM_Cncdrfm_Form_Report_AnalyseRFM extends CRM_Report_Form {
   private function getRowActiveContributers($rfmSummary, $referenceYear) {
     $row = [];
     $row['civicrm_dummy_entity_code'] = 'NRG New';
-    $row['civicrm_dummy_entity_combien'] = $rfmSummary->getNumberOfActiveContacts($referenceYear);
+    $row['civicrm_dummy_entity_combien'] = $rfmSummary->getNumberOfContactsWithCode($referenceYear, '000');
     $row['civicrm_dummy_entity_actifs'] = '';
     $row['civicrm_dummy_entity_pct_activite'] = '';
     $row['civicrm_dummy_entity_frequence'] = '';
