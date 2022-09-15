@@ -10,6 +10,16 @@ class CRM_Cncdrfm_RfmContact {
     return "contrib.financial_type_id in ($donPourUneCampagne, $donPonctuel) and contrib.contribution_status_id = 1";
   }
 
+  public static function getAllContribWhere() {
+    $don = 1;
+    $donNonDeductible = 19;
+    $donPourUneCampagne = 3;
+    $donPonctuel = 15;
+    $donRecurrent = 16;
+
+    return "contrib.financial_type_id in ($$don, $donNonDeductible, $donPourUneCampagne, $donPonctuel, $donRecurrent) and contrib.contribution_status_id = 1";
+  }
+
   public static function getYears() {
     $years = [];
 
