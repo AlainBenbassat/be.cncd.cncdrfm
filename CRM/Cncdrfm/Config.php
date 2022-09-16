@@ -131,7 +131,6 @@ class CRM_Cncdrfm_Config {
       'html_type' => 'Radio',
       'is_searchable' => '1',
       'is_search_range' => '0',
-      'weight' => '5',
       'text_length' => '255',
       'note_columns' => '60',
       'note_rows' => '4',
