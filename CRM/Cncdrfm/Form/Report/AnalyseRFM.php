@@ -89,7 +89,7 @@ class CRM_Cncdrfm_Form_Report_AnalyseRFM extends CRM_Report_Form {
     $referenceYear = $this->getSubmittedFilterReferenceYear();
     $rows = [];
 
-    $rows[] = $this->getRowActiveContributers($rfmSummary, $referenceYear);
+    $rows[] = $this->getRowNewContributers($rfmSummary, $referenceYear);
 
     $rfmCategories = $this->getRfmCategories();
     foreach ($rfmCategories as $rfmCode => $rfmLabel) {
@@ -99,7 +99,7 @@ class CRM_Cncdrfm_Form_Report_AnalyseRFM extends CRM_Report_Form {
     $rows[] = $this->getRowContributersWithCode($rfmSummary, $referenceYear, 'Total', 'total');
   }
 
-  private function getRowActiveContributers($rfmSummary, $referenceYear) {
+  private function getRowNewContributers($rfmSummary, $referenceYear) {
     $row = [];
     $row['civicrm_dummy_entity_code'] = 'NRG New';
     $row['civicrm_dummy_entity_combien'] = $rfmSummary->getNumberOfContactsWithCode($referenceYear, '000');

@@ -36,7 +36,7 @@ class CRM_Cncdrfm_RfmSummary {
         year(contrib.receive_date) < $referenceYear
       and " . CRM_Cncdrfm_RfmContact::getAllContribWhere() . "
     ";
-    
+
     $sql = "
       select
         count(c.id)
@@ -141,7 +141,7 @@ class CRM_Cncdrfm_RfmSummary {
 
   private function codeToWhere($code) {
     if ($code == 'total') {
-      return " and rfm.recency <> '000'";
+      return " ";
     }
     else {
       return  " and rfm.recency = '$code'";
