@@ -126,7 +126,7 @@ class CRM_Cncdrfm_Config {
     $params = [
       'custom_group_id' => $this->getCustomGroupRFM()['id'],
       'name' => 'new_donor',
-      'label' => 'Nouveau donateur?',
+      'label' => 'Nouveau donateur ?',
       'data_type' => 'Boolean',
       'html_type' => 'Radio',
       'is_searchable' => '1',
