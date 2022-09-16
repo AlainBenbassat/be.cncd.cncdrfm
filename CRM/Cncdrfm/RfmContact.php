@@ -17,7 +17,7 @@ class CRM_Cncdrfm_RfmContact {
     $donPonctuel = 15;
     $donRecurrent = 16;
 
-    return "contrib.financial_type_id in ($$don, $donNonDeductible, $donPourUneCampagne, $donPonctuel, $donRecurrent) and contrib.contribution_status_id = 1";
+    return "contrib.financial_type_id in ($don, $donNonDeductible, $donPourUneCampagne, $donPonctuel, $donRecurrent) and contrib.contribution_status_id = 1";
   }
 
   public static function getYears() {
