@@ -97,6 +97,7 @@ class CRM_Cncdrfm_RfmContact {
       $customField_frequency => $f,
       $customField_monetaryValue => $m,
       $customField_average => $avgM,
+      $customField_new_donor => $isNewDonor,
     ];
     civicrm_api3('contact', 'create', $params);
 
