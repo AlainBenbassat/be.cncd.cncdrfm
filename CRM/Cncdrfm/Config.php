@@ -7,6 +7,7 @@ class CRM_Cncdrfm_Config {
     $this->getCustomFieldFrequency();
     $this->getCustomFieldMonetaryValue();
     $this->getCustomFieldAverageMonetaryValue();
+    $this->getCustomFieldIsNewDonor();
   }
 
   public function getCustomGroupRFM() {
@@ -117,6 +118,24 @@ class CRM_Cncdrfm_Config {
       'note_columns' => '60',
       'note_rows' => '4',
       'column_name' => 'monetary_value',
+    ];
+    return $this->createOrGetCustomField($params);
+  }
+
+  public function getCustomFieldIsNewDonor() {
+    $params = [
+      'custom_group_id' => $this->getCustomGroupRFM()['id'],
+      'name' => 'new_donor',
+      'label' => 'Nouveau donateur?',
+      'data_type' => 'Boolean',
+      'html_type' => 'Radio',
+      'is_searchable' => '1',
+      'is_search_range' => '0',
+      'weight' => '5',
+      'text_length' => '255',
+      'note_columns' => '60',
+      'note_rows' => '4',
+      'column_name' => 'new_donor',
     ];
     return $this->createOrGetCustomField($params);
   }

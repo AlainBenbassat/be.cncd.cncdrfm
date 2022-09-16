@@ -82,11 +82,13 @@ class CRM_Cncdrfm_RfmContact {
     $customField_frequency = 'custom_' . $config->getCustomFieldFrequency()['id'];
     $customField_monetaryValue = 'custom_' . $config->getCustomFieldMonetaryValue()['id'];
     $customField_average = 'custom_' . $config->getCustomFieldAverageMonetaryValue()['id'];
+    $customField_new_donor = 'custom_' . $config->getCustomFieldIsNewDonor()['id'];
 
     $r = self::calcRecency($id, $year);
     $f = self::calcFrequency($id, $year);
     $m = self::calcMonetaryValue($id, $year);
     $avgM = self::calcAverageMonetaryValue($id, $year);
+    $isNewDonor = self::calcIsNewDonor($id, $year);
 
     $params = [
       'id' => $id,
@@ -197,6 +199,22 @@ class CRM_Cncdrfm_RfmContact {
         year(contrib.receive_date) = $year
       and " . self::getContribWhere();
     return CRM_Core_DAO::singleValueQuery($sql);
+  }
+
+  public static function calcIsNewDonor($id, $year) {
+    $sql = "
+      select
+        count(*)
+      from
+        civicrm_contribution contrib
+      where
+        contrib.contact_id = $id
+      and
+        year(contrib.receive_date) < $year
+      and " . self::getAllContribWhere();
+    $n = CRM_Core_DAO::singleValueQuery($sql);
+
+    return $n == 0 ? 1 : 0;
   }
 
   public static function getRfmForContactAndYear($id, $year) {

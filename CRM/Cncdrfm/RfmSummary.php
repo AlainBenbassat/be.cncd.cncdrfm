@@ -24,18 +24,6 @@ class CRM_Cncdrfm_RfmSummary {
 
   public function getNumberOfContactsNew($referenceYear) {
     $code = '000';
-    $whereCode = $this->codeToWhere($code);
-    $pastDonations = "
-      select
-        *
-      from
-        civicrm_contribution contrib
-      where
-        contrib.contact_id = c.id
-      and
-        year(contrib.receive_date) < $referenceYear
-      and " . CRM_Cncdrfm_RfmContact::getAllContribWhere() . "
-    ";
 
     $sql = "
       select
@@ -47,10 +35,11 @@ class CRM_Cncdrfm_RfmSummary {
       where
         c.is_deleted = 0
       and
+        and rfm.recency = '000'
+      and
         rfm.reference_year = $referenceYear
       and
-        not exists ($pastDonations)
-      $whereCode
+        rfm.new_donor = 1
     ";
 
     return CRM_Core_DAO::singleValueQuery($sql);
@@ -141,7 +130,7 @@ class CRM_Cncdrfm_RfmSummary {
 
   private function codeToWhere($code) {
     if ($code == 'total') {
-      return " ";
+      return ' ';
     }
     else {
       return  " and rfm.recency = '$code'";
