@@ -23,8 +23,6 @@ class CRM_Cncdrfm_RfmSummary {
   }
 
   public function getNumberOfContactsNew($referenceYear) {
-    $code = '000';
-
     $sql = "
       select
         count(c.id)

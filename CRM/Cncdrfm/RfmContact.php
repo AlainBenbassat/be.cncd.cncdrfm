@@ -109,6 +109,7 @@ class CRM_Cncdrfm_RfmContact {
     $f = self::calcFrequency($id, $year);
     $m = self::calcMonetaryValue($id, $year);
     $avgM = self::calcAverageMonetaryValue($id, $year);
+    $isNewDonor = self::calcIsNewDonor($id, $year);
 
     $sql = "
       update
@@ -117,7 +118,8 @@ class CRM_Cncdrfm_RfmContact {
         recency = %1,
         frequency = %2,
         monetary_value = %3,
-        average_monetary_value = %4
+        average_monetary_value = %4,
+        new_donor = %5
       where
         entity_id = $id
       and
@@ -129,6 +131,7 @@ class CRM_Cncdrfm_RfmContact {
       2 => [$f, 'Integer'],
       3 => [$m, 'Money'],
       4 => [$avgM, 'Money'],
+      5 => [$isNewDonor, 'Integer'],
     ];
 
     CRM_Core_DAO::executeQuery($sql, $sqlParams);
